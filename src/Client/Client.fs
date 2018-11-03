@@ -80,12 +80,27 @@ let show = function
 | { Counter = Some x } -> string x
 | { Counter = None   } -> "Loading..."
 
-let button txt onClick =
-    Button.button
-        [ Button.IsFullWidth
-          Button.Color IsPrimary
-          Button.OnClick onClick ]
-        [ str txt ]
+let tile = 
+   Tile.ancestor [ ]
+        [ Tile.parent [  Tile.IsVertical ]
+            (List.replicate 19 (Tile.parent [
+                Tile.Size Tile.Is1
+            ]  
+                (List.replicate 60 (Tile.child [] [Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]] ))
+              ))
+           ]
+let hide e =
+    ()
+let quickview = 
+    Quickview.quickview [ Quickview.IsActive true ]
+                        [ Quickview.header [ ]
+                            [ Quickview.title [ ] [ str "Testing..." ]
+                              Delete.delete [ Delete.OnClick hide ] [ ] ]
+                          Quickview.body [ ]
+                            [ p [ ] [ str "The body" ] ]
+                          Quickview.footer [ ]
+                            [ Button.button [ Button.OnClick hide ]
+                                            [ str "Hide the quickview!" ] ] ]
 
 let view (model : Model) (dispatch : Msg -> unit) =
     div []
@@ -94,13 +109,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 [ Heading.h2 [ ]
                     [ str "SAFE Template" ] ] ]
 
-          Container.container []
-              [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                    [ Heading.h3 [] [ str ("Press buttons to manipulate counter: " + show model) ] ]
-                Columns.columns []
-                    [ Column.column [] [ button "-" (fun _ -> dispatch Decrement) ]
-                      Column.column [] [ button "+" (fun _ -> dispatch Increment) ] ] ]
-
+          tile
+          quickview
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ safeComponents ] ] ]
