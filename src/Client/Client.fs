@@ -12,7 +12,7 @@ open Thoth.Json
 open Shared
 
 open Fulma
-
+open Fulma.Extensions
 
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter

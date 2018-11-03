@@ -1,3 +1,5 @@
+
+
 GROUP Build
 STORAGE: NONE
 RESTRICTION: == netstandard2.0
@@ -607,6 +609,10 @@ NUGET
     Fulma (1.0)
       Fable.Core (>= 2.0)
       Fable.React (>= 4.0.1)
+    Fulma.Extensions (1.0)
+      Fable.Core (>= 2.0)
+      Fable.React (>= 4.0.1)
+      Fulma (>= 1.0)
     Thoth.Json (2.2)
       Fable.Core (>= 2.0)
       FSharp.Core (>= 4.5.2)
