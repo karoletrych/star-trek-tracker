@@ -12,20 +12,7 @@ open Thoth.Json
 open Shared
 
 open Fulma
-
-// The model holds data that you want to keep track of while the application is running
-// in this case, we are keeping track of a counter
-// we mark it as optional, because initially it will not be available from the client
-// the initial value will be requested from server
-type Model = { Counter: Counter option }
-
-// The Msg type defines what events/actions can occur while the application is running
-// the state of the application changes *only* in reaction to these events
-type Msg =
-| Increment
-| Decrement
-| InitialCountLoaded of Result<Counter, exn>
-
+open Types
 
 
 // defines the initial state and initial command (= side-effect) of the application
@@ -79,35 +66,25 @@ let show = function
 | { Counter = Some x } -> string x
 | { Counter = None   } -> "Loading..."
 
-type Episode = {
-    Series : string;
-    Title : string;
-    Length: int;
-    ImdbRating: decimal;
-}
-
-type Series = {
-    Episodes : Episode list
-}
 
 let starTrek = [
     {
-        Episodes= (List.replicate 60 {Series="1"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="1"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
     }
     {
-        Episodes= (List.replicate 60 {Series="2"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="2"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
     }
     {
-        Episodes= (List.replicate 60 {Series="3"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="3"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
     }
     {
-        Episodes= (List.replicate 60 {Series="4"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="4"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
     }
     {
-        Episodes= (List.replicate 60 {Series="5"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="5"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
     }
     {
-        Episodes= (List.replicate 60 {Series="6"; Title=""; Length=1;ImdbRating=1.2m;})
+        Episodes= (List.replicate 60 {Series="6"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
     }
     ]
 let image = Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]
@@ -126,7 +103,10 @@ let episodeView (e : Episode) =
 
 let seriesView (series : Series) =
     Columns.columns [Columns.IsMultiline]
-        (series.Episodes |> List.map (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  [episodeView e])))
+        (series.Episodes 
+        |> List.map 
+            (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
+                        [ofType<EpisodeItem.EpisodeItem,_,_> (unbox null) [] ])))
 let episodesView (st : Series list) = 
       Column.column [Column.Width (Screen.All, Column.IsFull) ]
         (st |> List.map seriesView)
