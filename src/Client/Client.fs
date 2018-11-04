@@ -14,6 +14,7 @@ open Shared
 
 open Fulma
 open Fulma.Extensions
+open Fulma
 
 // The model holds data that you want to keep track of while the application is running
 // in this case, we are keeping track of a counter
@@ -81,15 +82,12 @@ let show = function
 | { Counter = Some x } -> string x
 | { Counter = None   } -> "Loading..."
 
-let tile = 
-   Tile.ancestor [ ]
-        [ Tile.parent [  Tile.IsVertical ]
-            (List.replicate 19 (Tile.parent [
-                Tile.Size Tile.Is1
-            ]  
-                (List.replicate 60 (Tile.child [] [Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]] ))
-              ))
-           ]
+let image = Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]
+let episodesView = 
+     Columns.columns [Columns.IsMultiline ] 
+        (List.replicate 750 (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ] 
+            [image]
+        ))
 let hide e =
     ()
 
@@ -137,7 +135,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                     [ str "SAFE Template" ] ] ]
 
           ofType<QuickviewDemo,_,_> (unbox null) []
-          tile
+          episodesView
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ safeComponents ] ] ]
