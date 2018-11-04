@@ -6,14 +6,11 @@ open Elmish.React
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
-open Fable.Import
 
 open Thoth.Json
 
 open Shared
 
-open Fulma
-open Fulma.Extensions
 open Fulma
 
 // The model holds data that you want to keep track of while the application is running
@@ -82,50 +79,60 @@ let show = function
 | { Counter = Some x } -> string x
 | { Counter = None   } -> "Loading..."
 
+type Episode = {
+    Series : string;
+    Title : string;
+    Length: int;
+    ImdbRating: decimal;
+}
+
+type Series = {
+    Episodes : Episode list
+}
+
+let starTrek = [
+    {
+        Episodes= (List.replicate 60 {Series="1"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    {
+        Episodes= (List.replicate 60 {Series="2"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    {
+        Episodes= (List.replicate 60 {Series="3"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    {
+        Episodes= (List.replicate 60 {Series="4"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    {
+        Episodes= (List.replicate 60 {Series="5"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    {
+        Episodes= (List.replicate 60 {Series="6"; Title=""; Length=1;ImdbRating=1.2m;})
+    }
+    ]
 let image = Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]
-let episodesView = 
-     Columns.columns [Columns.IsMultiline ] 
-        (List.replicate 750 (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ] 
-            [image]
-        ))
+
+let getColor = function
+    | "1" -> IsSuccess
+    | "2" -> IsWarning
+    | "3" -> IsBlack
+    | "4" -> IsGreyLight
+    | "5" -> IsPrimary
+    | "6" -> IsDanger
+    | _ -> failwith ""
+
+let episodeView (e : Episode) =
+            Notification.notification [ Notification.Color (getColor e.Series) ] [ str "Column n°1" ] 
+
+let seriesView (series : Series) =
+    Columns.columns [Columns.IsMultiline]
+        (series.Episodes |> List.map (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  [episodeView e])))
+let episodesView (st : Series list) = 
+      Column.column [Column.Width (Screen.All, Column.IsFull) ]
+        (st |> List.map seriesView)
 let hide e =
     ()
 
-type QuickviewDemoProps =
-    interface end
-
-type QuickviewDemoState =
-    { IsActive : bool }
-
-
-type QuickviewDemo(props) =
-    inherit React.Component<QuickviewDemoProps, QuickviewDemoState>(props)
-    do base.setInitState({ IsActive = false })
-
-    member this.show _ =
-        { this.state with
-                        IsActive = true }
-        |> this.setState
-
-    member this.hide _ =
-        { this.state with
-                        IsActive = false }
-        |> this.setState
-
-    override this.render () =
-        div [ ]
-            [ Quickview.quickview [ Quickview.IsActive this.state.IsActive ]
-                    [ Quickview.header [ ]
-                        [ Quickview.title [ ] [ str "Testing..." ]
-                          Delete.delete [ Delete.OnClick this.hide ] [ ] ]
-                      Quickview.body [ ]
-                        [ p [ ] [ str "The body" ] ]
-                      Quickview.footer [ ]
-                        [ Button.button [ Button.OnClick this.hide ]
-                                        [ str "Hide the quickview!" ] ] ]
-              Button.button [ Button.Color IsPrimary
-                              Button.OnClick this.show ]
-                            [ str "Show the Quickview!" ] ]
 
 let view (model : Model) (dispatch : Msg -> unit) =
     div []
@@ -134,8 +141,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 [ Heading.h2 [ ]
                     [ str "SAFE Template" ] ] ]
 
-          ofType<QuickviewDemo,_,_> (unbox null) []
-          episodesView
+          ofType<Quickview.QuickviewDemo,_,_> (unbox null) []
+          episodesView starTrek
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ safeComponents ] ] ]
