@@ -9,17 +9,16 @@ open Saturn
 open Shared
 
 open Giraffe.Serialization
+open StarTrekData
 
 let publicPath = Path.GetFullPath "../Client/public"
 let port = 8085us
 
-let getInitCounter() : Task<Counter> = task { return 42 }
 
 let webApp = router {
-    get "/api/init" (fun next ctx ->
+    get "/api/star-trek-data" (fun next ctx ->
         task {
-            let! counter = getInitCounter()
-            return! Successful.OK counter next ctx
+            return! Successful.OK StarTrekData.starTrekData next ctx
         })
 }
 

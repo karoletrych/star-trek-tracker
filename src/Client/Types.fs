@@ -6,27 +6,40 @@ open Shared
 // in this case, we are keeping track of a counter
 // we mark it as optional, because initially it will not be available from the client
 // the initial value will be requested from server
-type Model = { Counter: Counter option }
+type Model = { StarTrekData: string option }
 
 // The Msg type defines what events/actions can occur while the application is running
 // the state of the application changes *only* in reaction to these events
 type Msg =
-| Increment
-| Decrement
-| InitialCountLoaded of Result<Counter, exn>
+| StarTrekDataLoaded of Result<string, exn>
+| ToggleEpisodeItem
+
 
 
 type Episode = {
-    Series : string;
     Title : string;
-    Length: int;
-    ImdbRating: decimal;
-    IsWatched: bool;
+    EpisodeID: string;
+    Plot: string array;
+    ImdbRating: decimal option;
+    OriginalAirDate : string;
+    ImdbURL : string;
+    PlotOutline : string option;
 }
+
+type Season = Episode list
 
 type Series = {
-    Episodes : Episode list
+    MovieID: string
+    Seasons : Season list
 }
-
+type StarTrek = {
+    TOS: Series
+    TNG: Series
+    STD: Series
+    DSN: Series
+    STV: Series
+    STE: Series
+    TAS: Series
+}
 
 

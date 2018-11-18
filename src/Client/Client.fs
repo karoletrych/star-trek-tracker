@@ -6,39 +6,34 @@ open Elmish.React
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
-
 open Thoth.Json
 
 open Shared
 
 open Fulma
 open Types
+open System
+open Fable.Core
+open Fable.Core
+open Fable.Import
 
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { Counter = None }
+    let initialModel = { StarTrekData = None }
     let loadCountCmd =
         Cmd.ofPromise
-            (fetchAs<Counter> "/api/init" Decode.int)
+            (fetchAs<string> "/api/star-trek-data" Decode.string)
             []
-            (Ok >> InitialCountLoaded)
-            (Error >> InitialCountLoaded)
+            (Ok >> StarTrekDataLoaded)
+            (Error >> StarTrekDataLoaded)
     initialModel, loadCountCmd
 
-// The update function computes the next state of the application based on the current state and the incoming events/messages
-// It can also run side-effects (encoded as commands) like calling the server via Http.
-// these commands in turn, can dispatch messages to which the update function will react.
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
-    match currentModel.Counter, msg with
-    | Some x, Increment ->
-        let nextModel = { currentModel with Counter = Some (x + 1) }
-        nextModel, Cmd.none
-    | Some x, Decrement ->
-        let nextModel = { currentModel with Counter = Some (x - 1) }
-        nextModel, Cmd.none
-    | _, InitialCountLoaded (Ok initialCount)->
-        let nextModel = { Counter = Some initialCount }
+    JS.console.log("UPDATE")
+    match currentModel.StarTrekData, msg with
+    | _, StarTrekDataLoaded (Ok starTrekData)->
+        let nextModel = { StarTrekData = Some starTrekData }
         nextModel, Cmd.none
 
     | _ -> currentModel, Cmd.none
@@ -62,54 +57,41 @@ let safeComponents =
           str " powered by: "
           components ]
 
-let show = function
-| { Counter = Some x } -> string x
-| { Counter = None   } -> "Loading..."
+let seriesDecoder : Decode.Decoder<Series> = 
+    Decode.Auto.generateDecoder<Series>(true)
+let starTrekDecoder: Decode.Decoder<StarTrek> =
+    Decode.object (fun get ->
+        { 
+            TOS = get.Required.Field "Star Trek" seriesDecoder
+            TNG = get.Required.Field "Star Trek: The Next Generation" seriesDecoder 
+            STD = get.Required.Field "Star Trek: Discovery" seriesDecoder 
+            DSN = get.Required.Field "Star Trek: Deep Space Nine" seriesDecoder 
+            STV = get.Required.Field "Star Trek: Voyager" seriesDecoder 
+            STE = get.Required.Field "Star Trek: Enterprise" seriesDecoder 
+            TAS = get.Required.Field "Star Trek: The Animated Series" seriesDecoder 
+        })
 
+let starTrek = function
+| { StarTrekData = Some x } -> 
+    match Thoth.Json.Decode.fromString starTrekDecoder x with
+    | Ok x -> Some x
+    | Error e -> None
+| { StarTrekData = None   } -> None
 
-let starTrek = [
-    {
-        Episodes= (List.replicate 60 {Series="1"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
-    }
-    {
-        Episodes= (List.replicate 60 {Series="2"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
-    }
-    {
-        Episodes= (List.replicate 60 {Series="3"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
-    }
-    {
-        Episodes= (List.replicate 60 {Series="4"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
-    }
-    {
-        Episodes= (List.replicate 60 {Series="5"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = true})
-    }
-    {
-        Episodes= (List.replicate 60 {Series="6"; Title=""; Length=1;ImdbRating=1.2m; IsWatched = false})
-    }
-    ]
-let image = Image.image [Image.IsSquare; Image.Is32x32] [img [ Src "Images/star_trek.jpg" ]]
-
-let getColor = function
-    | "1" -> IsSuccess
-    | "2" -> IsWarning
-    | "3" -> IsBlack
-    | "4" -> IsGreyLight
-    | "5" -> IsPrimary
-    | "6" -> IsDanger
-    | _ -> failwith ""
-
-let episodeView (e : Episode) =
-            Notification.notification [ Notification.Color (getColor e.Series) ] [ str "Column n°1" ] 
 
 let seriesView (series : Series) =
     Columns.columns [Columns.IsMultiline]
-        (series.Episodes 
+        (series.Seasons |> List.collect (fun s -> s) 
         |> List.map 
             (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
                         [ofType<EpisodeItem.EpisodeItem,_,_> (unbox null) [] ])))
-let episodesView (st : Series list) = 
-      Column.column [Column.Width (Screen.All, Column.IsFull) ]
-        (st |> List.map seriesView)
+let starTrekView (st : StarTrek option) = 
+      match st with
+      | Some st -> 
+          Column.column [Column.Width (Screen.All, Column.IsFull) ]
+            ([st.DSN; st.STD; st.STE; st.STV; st.TAS; st.TNG; st.TOS] |> List.map seriesView)
+      | None -> 
+        Column.column [] []
 let hide e =
     ()
 
@@ -120,9 +102,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
                     [ str "SAFE Template" ] ] ]
-
           ofType<Quickview.QuickviewDemo,_,_> (unbox null) []
-          episodesView starTrek
+          starTrekView (starTrek model)
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ safeComponents ] ] ]
