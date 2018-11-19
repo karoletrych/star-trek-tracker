@@ -57,46 +57,56 @@ let safeComponents =
           str " powered by: "
           components ]
 
-let seriesDecoder : Decode.Decoder<Series> = 
-    Decode.Auto.generateDecoder<Series>(true)
+let seasonsDecoder = Decode.Auto.generateDecoder<Season list>( true)
+let seriesDecoder title : Decode.Decoder<Series> = 
+    Decode.object (fun s -> 
+                            { 
+                                MovieID = s.Required.Field "movieID" Decode.string
+                                Title = title
+                                Seasons = s.Required.Field "seasons" seasonsDecoder
+                            })
 let starTrekDecoder: Decode.Decoder<StarTrek> =
     Decode.object (fun get ->
         { 
-            TOS = get.Required.Field "Star Trek" seriesDecoder
-            TNG = get.Required.Field "Star Trek: The Next Generation" seriesDecoder 
-            STD = get.Required.Field "Star Trek: Discovery" seriesDecoder 
-            DSN = get.Required.Field "Star Trek: Deep Space Nine" seriesDecoder 
-            STV = get.Required.Field "Star Trek: Voyager" seriesDecoder 
-            STE = get.Required.Field "Star Trek: Enterprise" seriesDecoder 
-            TAS = get.Required.Field "Star Trek: The Animated Series" seriesDecoder 
+            TOS = get.Required.Field "Star Trek" (seriesDecoder "Star Trek")
+            TNG = get.Required.Field "Star Trek: The Next Generation" (seriesDecoder "Star Trek: The Next Generation")
+            STD = get.Required.Field "Star Trek: Discovery" (seriesDecoder  "Star Trek: Discovery")
+            DSN = get.Required.Field "Star Trek: Deep Space Nine" (seriesDecoder "Star Trek: Deep Space Nine")
+            STV = get.Required.Field "Star Trek: Voyager" (seriesDecoder "Star Trek: Voyager")
+            STE = get.Required.Field "Star Trek: Enterprise" (seriesDecoder "Star Trek: Enterprise")
+            TAS = get.Required.Field "Star Trek: The Animated Series" (seriesDecoder "Star Trek: The Animated Series")
         })
 
 let starTrek = function
 | { StarTrekData = Some x } -> 
     match Thoth.Json.Decode.fromString starTrekDecoder x with
     | Ok x -> Some x
-    | Error e -> None
+    | Error e -> failwith e
 | { StarTrekData = None   } -> None
 
 
-let seriesView (series : Series) =
-    Columns.columns [Columns.IsMultiline]
-        (series.Seasons |> List.collect (fun s -> s) 
-        |> List.map 
-            (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
-                        [ofType<EpisodeItem.EpisodeItem,_,_> (unbox null) [] ])))
+let tvSeriesView (series : Series) =
+    Section.section [  ]
+            [ h1 [ ] [str series.Title];
+                 Columns.columns [Columns.IsMultiline]
+                    (series.Seasons |> List.collect (fun s -> s) 
+                    |> List.map 
+                        (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
+                                    [ofType<EpisodeItem.EpisodeItem,_,_> (unbox null) [] ]))) 
+                      ] 
+    
 let starTrekView (st : StarTrek option) = 
       match st with
       | Some st -> 
           Column.column [Column.Width (Screen.All, Column.IsFull) ]
-            ([st.DSN; st.STD; st.STE; st.STV; st.TAS; st.TNG; st.TOS] |> List.map seriesView)
+            ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map tvSeriesView)
       | None -> 
-        Column.column [] []
-let hide e =
-    ()
+          Column.column [] []
 
 
 let view (model : Model) (dispatch : Msg -> unit) =
+    JS.console.log("VIEW")
+    JS.console.log(model)
     div []
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
