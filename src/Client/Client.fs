@@ -46,26 +46,44 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | _ -> currentModel, Cmd.none
 
 
+type Layout = 
+| Clustered
+| GroupedBySeries
+| GroupedBySeason
 
 let episodeComponent dispatch e  = ofType<EpisodeItem.EpisodeItem,_,_> ({Episode = e; Dispatch = dispatch}) []
 
-let tvSeriesView dispatch (series : Series) =
-    Section.section [  ]
-            [ h1 [ ] [str series.Title];
-                 Columns.columns [Columns.IsMultiline]
-                    (series.Seasons |> List.collect (id) 
-                    |> List.map 
-                        (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
-                                    [ episodeComponent dispatch e]))) 
-                      ] 
-    
+
+let tvSeriesView dispatch (layout : Layout) (series : Series)  =
+    let episodeColumn e= (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
+                                        [ episodeComponent dispatch e])
+    match layout with
+    | GroupedBySeries -> 
+        Section.section [  ]
+                [ h1 [ ] [str series.Title];
+                     Columns.columns [Columns.IsMultiline]
+                        (series.Seasons 
+                        |> List.collect id 
+                        |> List.map episodeColumn ) 
+                ] 
+    | GroupedBySeason -> 
+        let seasonToColumns (season : Season) = 
+            Columns.columns [Columns.IsMultiline] (season |> List.map episodeColumn)
+        Section.section [  ]
+                [ h1 [ ] [str series.Title];
+                     (series.Seasons
+                     |> List.map seasonToColumns 
+                     |> (fun x -> div [] x))
+                ] 
+ 
 let starTrekView dispatch (st : StarTrek option) = 
-      match st with
-      | Some st -> 
-          Column.column [Column.Width (Screen.All, Column.IsFull) ]
-            ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map (tvSeriesView dispatch))
-      | None -> 
-          Column.column [] []
+    let layout = GroupedBySeason
+    match st with
+    | Some st -> 
+        Column.column [Column.Width (Screen.All, Column.IsFull) ]
+            ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map (tvSeriesView dispatch layout))
+    | None -> 
+        Column.column [] []
 
 
 let view (model : Model) (dispatch : Msg -> unit) =
