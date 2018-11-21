@@ -32,7 +32,7 @@ type StarTrek = {
 
 type Model = { 
     StarTrekData: string option;
-    QuickInfo: Episode option
+    Quickview: Episode option
 }
 
 type Msg =

@@ -10,12 +10,12 @@ let tryGet get episode =
      
 let view (model : Model) (dispatch : Msg -> unit) = 
     div [ ]
-        [ Quickview.quickview [ Quickview.IsActive model.QuickInfo.IsSome ]
+        [ Quickview.quickview [ Quickview.IsActive model.Quickview.IsSome ]
                 [ Quickview.header [ ]
-                    [ Quickview.title [ ] [ str (model.QuickInfo |> tryGet (fun e -> e.Title)) ]
+                    [ Quickview.title [ ] [ str (model.Quickview |> tryGet (fun e -> e.Title)) ]
                       Delete.delete [ Delete.OnClick (fun e -> dispatch CloseQuickview) ] [ ] ]
                   Quickview.body [ ]
-                    [ p [ ] [ str (model.QuickInfo |> tryGet (fun e -> e.PlotOutline |>Option.toObj )) ] ]
+                    [ p [ ] [ str (model.Quickview |> tryGet (fun e -> e.PlotOutline |> Option.toObj )) ] ]
                   Quickview.footer [ ]
                     [ ] ]
         ]

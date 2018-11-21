@@ -6,6 +6,7 @@
     <ItemGroup>
         <Compile Include="..\Shared\Shared.fs" />
         <Compile Include="Types.fs" />
+        <Compile Include="JsonParser.fs" />
         <Compile Include="Quickview.fs" />
         <Compile Include="EpisodeItem.fs" />
         <Compile Include="Client.fs" />

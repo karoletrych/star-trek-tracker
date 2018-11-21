@@ -8,22 +8,20 @@ open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
 open Fable.Import
 
-open Thoth.Json
 
 open Shared
 
 open Fulma
 open Types
-open System
-open Fable.Core
-open Fable.Core
-open Fable.Import
+open JsonParser
+open Thoth.Json
+
 open Fulma.Extensions
 
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { StarTrekData = None; QuickInfo = None }
+    let initialModel = { StarTrekData = None; Quickview = None }
     let loadCountCmd =
         Cmd.ofPromise
             (fetchAs<string> "/api/star-trek-data" Decode.string)
@@ -33,44 +31,21 @@ let init () : Model * Cmd<Msg> =
     initialModel, loadCountCmd
 
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
-    JS.console.log("UPDATE")
     match currentModel.StarTrekData, msg with
     | _, StarTrekDataLoaded (Ok starTrekData) ->
         let nextModel = {currentModel with  StarTrekData = Some starTrekData }
         nextModel, Cmd.none
     | _, ShowQuickview e -> 
-        let nextModel = { currentModel with QuickInfo = Some e}
+        let nextModel = { currentModel with Quickview = Some e}
         nextModel, Cmd.none
+    | _, CloseQuickview -> 
+        let nextModel = { currentModel with Quickview = None}
+        nextModel, Cmd.none
+
 
     | _ -> currentModel, Cmd.none
 
 
-let seasonsDecoder = Decode.Auto.generateDecoder<Season list>( true)
-let seriesDecoder title : Decode.Decoder<Series> = 
-    Decode.object (fun s -> 
-                            { 
-                                MovieID = s.Required.Field "movieID" Decode.string
-                                Title = title
-                                Seasons = s.Required.Field "seasons" seasonsDecoder
-                            })
-let starTrekDecoder: Decode.Decoder<StarTrek> =
-    Decode.object (fun get ->
-        { 
-            TOS = get.Required.Field "Star Trek" (seriesDecoder "Star Trek")
-            TNG = get.Required.Field "Star Trek: The Next Generation" (seriesDecoder "Star Trek: The Next Generation")
-            STD = get.Required.Field "Star Trek: Discovery" (seriesDecoder  "Star Trek: Discovery")
-            DSN = get.Required.Field "Star Trek: Deep Space Nine" (seriesDecoder "Star Trek: Deep Space Nine")
-            STV = get.Required.Field "Star Trek: Voyager" (seriesDecoder "Star Trek: Voyager")
-            STE = get.Required.Field "Star Trek: Enterprise" (seriesDecoder "Star Trek: Enterprise")
-            TAS = get.Required.Field "Star Trek: The Animated Series" (seriesDecoder "Star Trek: The Animated Series")
-        })
-
-let starTrek = function
-| { StarTrekData = Some x } -> 
-    match Thoth.Json.Decode.fromString starTrekDecoder x with
-    | Ok x -> Some x
-    | Error e -> failwith e
-| { StarTrekData = None   } -> None
 
 let episodeComponent dispatch e  = ofType<EpisodeItem.EpisodeItem,_,_> ({Episode = e; Dispatch = dispatch}) []
 
@@ -98,8 +73,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
-                    [ str "SAFE Template" ] ] ]
-          starTrekView dispatch (starTrek model)
+                    [ str "Trek Tracker" ] ] ]
+          starTrekView dispatch (JsonParser.starTrek model)
           Quickview.view model dispatch
         ]
 
