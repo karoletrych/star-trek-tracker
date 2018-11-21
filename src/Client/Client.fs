@@ -32,8 +32,11 @@ let init () : Model * Cmd<Msg> =
 let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     JS.console.log("UPDATE")
     match currentModel.StarTrekData, msg with
-    | _, StarTrekDataLoaded (Ok starTrekData)->
+    | _, StarTrekDataLoaded (Ok starTrekData) ->
         let nextModel = { StarTrekData = Some starTrekData }
+        nextModel, Cmd.none
+    | _, ShowQuickInfo e -> 
+        let nextModel = { StarTrekData = Some starTrekData; Quickview = { }
         nextModel, Cmd.none
 
     | _ -> currentModel, Cmd.none
@@ -84,22 +87,23 @@ let starTrek = function
     | Error e -> failwith e
 | { StarTrekData = None   } -> None
 
+let episodeComponent dispatch e  = ofType<EpisodeItem.EpisodeItem,_,_> ({Episode = e; Dispatch = dispatch}) []
 
-let tvSeriesView (series : Series) =
+let tvSeriesView dispatch (series : Series) =
     Section.section [  ]
             [ h1 [ ] [str series.Title];
                  Columns.columns [Columns.IsMultiline]
-                    (series.Seasons |> List.collect (fun s -> s) 
+                    (series.Seasons |> List.collect (id) 
                     |> List.map 
                         (fun e -> (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
-                                    [ofType<EpisodeItem.EpisodeItem,_,_> (unbox null) [] ]))) 
+                                    [ episodeComponent dispatch e]))) 
                       ] 
     
-let starTrekView (st : StarTrek option) = 
+let starTrekView dispatch (st : StarTrek option) = 
       match st with
       | Some st -> 
           Column.column [Column.Width (Screen.All, Column.IsFull) ]
-            ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map tvSeriesView)
+            ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map (tvSeriesView dispatch))
       | None -> 
           Column.column [] []
 
@@ -113,7 +117,7 @@ let view (model : Model) (dispatch : Msg -> unit) =
                 [ Heading.h2 [ ]
                     [ str "SAFE Template" ] ] ]
           ofType<Quickview.QuickviewDemo,_,_> (unbox null) []
-          starTrekView (starTrek model)
+          starTrekView dispatch (starTrek model)
           Footer.footer [ ]
                 [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
                     [ safeComponents ] ] ]

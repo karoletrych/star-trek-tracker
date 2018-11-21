@@ -3,9 +3,9 @@ open Fable.Import
 open Fable.Helpers.React
 open Fulma
 open Fulma.Extensions
+open Types
 
-type QuickviewDemoProps =
-    interface end
+type QuickviewDemoProps = interface end
 
 type QuickviewDemoState =
     { IsActive : bool }

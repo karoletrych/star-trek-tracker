@@ -7,15 +7,21 @@ open Fable.Helpers.React.Props
 open Types
 
 type EpisodeItemProps =
-    interface end
+    { 
+        Dispatch : Msg -> unit
+        Episode : Episode
+    }
 
 type EpisodeItemState =
-    { IsWatched : bool }
+    { 
+        IsWatched : bool
+        Episode : Episode
+    }
 
 
 type EpisodeItem(props) =
     inherit React.Component<EpisodeItemProps, EpisodeItemState>(props)
-    do base.setInitState({ IsWatched = false })
+    do base.setInitState({ IsWatched = false; Episode = props.Episode})
 
     member this.SetWatched _ =
         this.setState (fun s _ -> {s with IsWatched = true})
@@ -24,6 +30,8 @@ type EpisodeItem(props) =
         this.setState (fun s _ -> {s with IsWatched = false})
     member this.ToggleWatched _ =
         this.setState (fun s _ -> {s with IsWatched = not s.IsWatched})
+    member this.ShowInfo _ =
+        this.props.Dispatch (ShowQuickInfo this.state.Episode)
     override this.componentDidMount () =
         ()
     override this.render () =
