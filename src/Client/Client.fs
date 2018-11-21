@@ -18,11 +18,12 @@ open System
 open Fable.Core
 open Fable.Core
 open Fable.Import
+open Fulma.Extensions
 
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { StarTrekData = None }
+    let initialModel = { StarTrekData = None; QuickInfo = None }
     let loadCountCmd =
         Cmd.ofPromise
             (fetchAs<string> "/api/star-trek-data" Decode.string)
@@ -35,32 +36,14 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     JS.console.log("UPDATE")
     match currentModel.StarTrekData, msg with
     | _, StarTrekDataLoaded (Ok starTrekData) ->
-        let nextModel = { StarTrekData = Some starTrekData }
+        let nextModel = {currentModel with  StarTrekData = Some starTrekData }
         nextModel, Cmd.none
-    | _, ShowQuickInfo e -> 
-        let nextModel = { StarTrekData = Some starTrekData; Quickview = { }
+    | _, ShowQuickview e -> 
+        let nextModel = { currentModel with QuickInfo = Some e}
         nextModel, Cmd.none
 
     | _ -> currentModel, Cmd.none
 
-
-let safeComponents =
-    let components =
-        span [ ]
-           [
-             a [ Href "https://saturnframework.github.io" ] [ str "Saturn" ]
-             str ", "
-             a [ Href "http://fable.io" ] [ str "Fable" ]
-             str ", "
-             a [ Href "https://elmish.github.io/elmish/" ] [ str "Elmish" ]
-             str ", "
-             a [ Href "https://mangelmaxime.github.io/Fulma" ] [ str "Fulma" ]
-           ]
-
-    p [ ]
-        [ strong [] [ str "SAFE Template" ]
-          str " powered by: "
-          components ]
 
 let seasonsDecoder = Decode.Auto.generateDecoder<Season list>( true)
 let seriesDecoder title : Decode.Decoder<Series> = 
@@ -111,19 +94,14 @@ let starTrekView dispatch (st : StarTrek option) =
 
 
 let view (model : Model) (dispatch : Msg -> unit) =
-    JS.console.log("VIEW")
-    JS.console.log(model)
     div []
         [ Navbar.navbar [ Navbar.Color IsPrimary ]
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
                     [ str "SAFE Template" ] ] ]
-          ofType<Quickview.QuickviewDemo,_,_> (unbox null) []
           starTrekView dispatch (starTrek model)
-          Footer.footer [ ]
-                [ Content.content [ Content.Modifiers [ Modifier.TextAlignment (Screen.All, TextAlignment.Centered) ] ]
-                    [ safeComponents ] ] ]
-
+          Quickview.view model dispatch
+        ]
 
 #if DEBUG
 open Elmish.Debug

@@ -31,7 +31,7 @@ type EpisodeItem(props) =
     member this.ToggleWatched _ =
         this.setState (fun s _ -> {s with IsWatched = not s.IsWatched})
     member this.ShowInfo _ =
-        this.props.Dispatch (ShowQuickInfo this.state.Episode)
+        this.props.Dispatch (ShowQuickview this.state.Episode)
     override this.componentDidMount () =
         ()
     override this.render () =
@@ -39,7 +39,7 @@ type EpisodeItem(props) =
             [ Image.image [
                 Image.IsSquare
                 Image.Is32x32
-                (Image.Props [OnClick (fun _ -> this.ToggleWatched())]) 
+                (Image.Props [OnClick (fun _ -> this.ShowInfo())]) 
                 ]
                 [img [ Src (
                         if not this.state.IsWatched 

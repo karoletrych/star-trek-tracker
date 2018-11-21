@@ -32,11 +32,12 @@ type StarTrek = {
 
 type Model = { 
     StarTrekData: string option;
-    QuickInfo: Quic
-    }
+    QuickInfo: Episode option
+}
 
 type Msg =
 | StarTrekDataLoaded of Result<string, exn>
 | ToggleEpisodeItem
-| ShowQuickInfo of Episode
+| ShowQuickview of Episode
+| CloseQuickview
 
