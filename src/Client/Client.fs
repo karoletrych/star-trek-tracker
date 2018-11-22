@@ -21,7 +21,7 @@ open Fulma.Extensions
 
 // defines the initial state and initial command (= side-effect) of the application
 let init () : Model * Cmd<Msg> =
-    let initialModel = { StarTrekData = None; Quickview = None }
+    let initialModel = { StarTrekData = None; Quickview = None; Layout = Clustered }
     let loadCountCmd =
         Cmd.ofPromise
             (fetchAs<string> "/api/star-trek-data" Decode.string)
@@ -41,28 +41,26 @@ let update (msg : Msg) (currentModel : Model) : Model * Cmd<Msg> =
     | _, CloseQuickview -> 
         let nextModel = { currentModel with Quickview = None}
         nextModel, Cmd.none
+    | _, SliderChanged layout -> 
+        let nextModel = { currentModel with Layout = layout}
+        nextModel, Cmd.none
 
 
     | _ -> currentModel, Cmd.none
 
 
-type Layout = 
-| Clustered
-| GroupedBySeries
-| GroupedBySeason
-
 let episodeComponent dispatch e  = ofType<EpisodeItem.EpisodeItem,_,_> ({Episode = e; Dispatch = dispatch}) []
 
 
-let starTrekView dispatch (st : StarTrek option) layout = 
+let starTrekView model dispatch  = 
     let episodeColumn e= (Column.column [  ( Column.Width (Screen.All, Column.IsNarrow)) ]  
                                 [ episodeComponent dispatch e])
     let seasonToColumns (season : Season) = 
         Columns.columns [Columns.IsMultiline] (season |> List.map episodeColumn)
-
+    let st = JsonParser.starTrek model
     match st with
     | Some st -> 
-        match layout with
+        match model.Layout with
         | Clustered ->
             Column.column [Column.Width (Screen.All, Column.IsFull) ]
                 [Columns.columns [Columns.IsMultiline]
@@ -76,7 +74,7 @@ let starTrekView dispatch (st : StarTrek option) layout =
             Column.column [Column.Width (Screen.All, Column.IsFull) ]
                 ([st.TOS; st.TAS; st.TNG; st.DSN; st.STV; st.STE; st.STD; ] |> List.map (
                     fun series ->
-                    match layout with
+                    match model.Layout with
                     | GroupedBySeries -> 
                         Section.section [  ]
                                 [ h1 [ ] [str series.Title];
@@ -105,7 +103,8 @@ let view (model : Model) (dispatch : Msg -> unit) =
             [ Navbar.Item.div [ ]
                 [ Heading.h2 [ ]
                     [ str "Trek Tracker" ] ] ]
-          starTrekView dispatch (JsonParser.starTrek model) Clustered
+          Slider.view model dispatch
+          starTrekView model dispatch  
           Quickview.view model dispatch
         ]
 

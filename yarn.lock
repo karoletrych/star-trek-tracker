@@ -1020,6 +1020,10 @@ bulma-quickview@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/bulma-quickview/-/bulma-quickview-2.0.0.tgz#ac85d6cc23f98bd4b4be5cef11e9524554d2bbf3"
 
+bulma-slider@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/bulma-slider/-/bulma-slider-2.0.0.tgz#0be9b016228b62b8189891e67eafbf5aba846699"
+
 bulma@^0.7.2:
   version "0.7.2"
   resolved "https://registry.yarnpkg.com/bulma/-/bulma-0.7.2.tgz#8e944377b74c7926558830d38d8e19eaf49f5fb6"

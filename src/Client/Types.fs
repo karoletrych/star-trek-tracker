@@ -29,10 +29,16 @@ type StarTrek = {
     STD: Series
 }
 
+type Layout = 
+| Clustered
+| GroupedBySeries
+| GroupedBySeason
+
 
 type Model = { 
     StarTrekData: string option;
-    Quickview: Episode option
+    Quickview: Episode option;
+    Layout: Layout;
 }
 
 type Msg =
@@ -40,4 +46,5 @@ type Msg =
 | ToggleEpisodeItem
 | ShowQuickview of Episode
 | CloseQuickview
+| SliderChanged of Layout
 
