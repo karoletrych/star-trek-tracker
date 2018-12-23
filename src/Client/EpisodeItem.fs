@@ -39,7 +39,7 @@ type EpisodeItem(props) =
             [ Image.image [
                 Image.IsSquare
                 Image.Is32x32
-                (Image.Props [OnClick (fun _ -> this.ShowInfo())]) 
+                (Image.Props [OnClick (fun _ -> this.ShowInfo()); ]) 
                 ]
                 [img [ Src (
                         if not this.state.IsWatched 
